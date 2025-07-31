@@ -13,6 +13,5 @@ public class UserUpdateRequest {
     private String userEmail;
     private String userMobileNumber;
     private Integer userAge;
-    private UserStatus userStatus;
     private Double userBalance;
 }

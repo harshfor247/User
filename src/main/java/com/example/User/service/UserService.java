@@ -34,6 +34,13 @@ public class UserService {
             throw new MobileNumberAlreadyExistsException("Mobile number already registered");
         }
 
+        Optional<User> sameEmail = userRepository.findByUserEmail(userRequest.getUserEmail());
+
+        if (sameEmail.isPresent()) {
+            throw new RuntimeException("Email already registered");
+        }
+
+
         // 1. Convert DTO to Entity
         User user = objectMapper.convertValue(userRequest, User.class);
         user.setUserStatus(UserStatus.ACTIVE);
@@ -70,7 +77,7 @@ public class UserService {
                     if (userUpdateRequest.getUserName() != null)
                         existingUser.setUserName(userUpdateRequest.getUserName());
 
-                    if (userUpdateRequest.getUserEmail() != null)
+                    if (userUpdateRequest.getUserEmail() != null )
                         existingUser.setUserEmail(userUpdateRequest.getUserEmail());
 
                     if (userUpdateRequest.getUserMobileNumber() != null)
@@ -78,9 +85,6 @@ public class UserService {
 
                     if (userUpdateRequest.getUserAge() != null)
                         existingUser.setUserAge(userUpdateRequest.getUserAge());
-
-                    if (userUpdateRequest.getUserStatus() != null)
-                        existingUser.setUserStatus(userUpdateRequest.getUserStatus());
 
                     User updated = userRepository.save(existingUser);
 
