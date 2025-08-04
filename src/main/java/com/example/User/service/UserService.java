@@ -87,6 +87,9 @@ public class UserService {
                     if (userUpdateRequest.getUserAge() != null)
                         existingUser.setUserAge(userUpdateRequest.getUserAge());
 
+                    if (userUpdateRequest.getUserBalance() != null)
+                        existingUser.setUserBalance(userUpdateRequest.getUserBalance());
+
                     User updated = userRepository.save(existingUser);
 
                     // Convert to UserResponse
