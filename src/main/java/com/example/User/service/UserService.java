@@ -6,7 +6,9 @@ import com.example.User.dto.request.UserRequest;
 import com.example.User.dto.response.UserResponse;
 import com.example.User.entity.User;
 import com.example.User.enums.UserStatus;
-import com.example.User.exceptions.MobileNumberAlreadyExistsException;
+import com.example.User.exceptions.EmailAlreadyExistException;
+import com.example.User.exceptions.MobileNumberAlreadyExistException;
+import com.example.User.exceptions.UserIdException;
 import com.example.User.kafka.producer.BalanceProducer;
 import com.example.User.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.function.Consumer;
 
 
 @Service
@@ -31,13 +32,13 @@ public class UserService {
         Optional<User> existing = userRepository.findByUserMobileNumber(userRequest.getUserMobileNumber());
 
         if (existing.isPresent()) {
-            throw new MobileNumberAlreadyExistsException("Mobile number already registered");
+            throw new MobileNumberAlreadyExistException("Mobile number already registered");
         }
 
         Optional<User> sameEmail = userRepository.findByUserEmail(userRequest.getUserEmail());
 
         if (sameEmail.isPresent()) {
-            throw new RuntimeException("Email already registered");
+            throw new EmailAlreadyExistException("Email already registered");
         }
 
 
@@ -63,16 +64,16 @@ public class UserService {
 
 
     public ResponseEntity<UserResponse> getUser(Long userId) {
-        return userRepository.findById(userId)
+        return userRepository.findByUserId(userId)
                 .map(user -> {
                     UserResponse userResponse = objectMapper.convertValue(user, UserResponse.class);
                     return ResponseEntity.ok(userResponse);
                 })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new UserIdException("User does not exist with ID: " + userId));
     }
 
     public ResponseEntity<UserResponse> updateUser(UserUpdateRequest userUpdateRequest) {
-        return userRepository.findById(userUpdateRequest.getUserId())
+        return userRepository.findByUserId(userUpdateRequest.getUserId())
                 .map(existingUser -> {
                     if (userUpdateRequest.getUserName() != null)
                         existingUser.setUserName(userUpdateRequest.getUserName());
@@ -92,17 +93,17 @@ public class UserService {
                     UserResponse response = objectMapper.convertValue(updated, UserResponse.class);
                     return ResponseEntity.ok(response);
                 })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new UserIdException("User not Found!"));
     }
 
 
     public ResponseEntity<String> deactivateUser(Long userId) {
-        return userRepository.findById(userId)
+        return userRepository.findByUserId(userId)
                 .map(user -> {
                     user.setUserStatus(UserStatus.INACTIVE);
                     userRepository.save(user);
                     return ResponseEntity.ok("User deactivated successfully");
                 })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new UserIdException("User does not exist with ID: " + userId));
     }
 }
